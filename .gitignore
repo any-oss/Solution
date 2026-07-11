@@ -1,0 +1,15 @@
+.env
+*.pem
+*.key
+*secret*
+*password*
+*.token
+.docker_token
+.DS_Store
+__pycache__/
+*.pyc
+models/
+logs/
+data/
+prometheus_data/
+deploy.sh
