@@ -9,8 +9,34 @@ env:
   IMAGE_NAME: anydockerhub/solution
 
 jobs:
-  build-and-push:
+  test:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest flake8
+      - name: Lint
+        run: flake8 core/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Unit tests
+        run: python -m pytest tests/ -v
+      - name: Smoke test
+        run: |
+          docker compose up -d
+          sleep 10
+          bash scripts/smoke_test.sh
+          docker compose down
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -24,9 +50,12 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=sha
+            type=ref,event=branch
             type=raw,value=latest
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

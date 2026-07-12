@@ -1,9 +1,12 @@
 global:
   scrape_interval: 15s
 scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-  - job_name: 'ai-proxy'
+  - job_name: 'proxy'
     static_configs:
       - targets: ['proxy:8000']
+  - job_name: 'cpu-backend'
+    static_configs:
+      - targets: ['cpu-backend:8001']
+  - job_name: 'gpu-backend'
+    static_configs:
+      - targets: ['gpu-backend:8002']

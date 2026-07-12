@@ -1,26 +1,54 @@
 services:
   proxy:
     build: .
-    command: python core/proxy.py
+    command: python -m core.proxy
     ports:
       - "8000:8000"
-    environment:
-      - CPU_BACKEND_URL=http://cpu-backend:8001
-      - GPU_BACKEND_URL=http://gpu-backend:8002
+    env_file:
+      - .env
+    depends_on:
+      cpu-backend:
+        condition: service_healthy
+      gpu-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   cpu-backend:
     build: .
-    command: python core/backend_cpu.py
+    command: python -m core.backend_cpu
     ports:
       - "8001:8001"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
   gpu-backend:
     build: .
-    command: python core/backend_gpu.py
+    command: python -m core.backend_gpu
     ports:
       - "8002:8002"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
   prometheus:
@@ -29,4 +57,13 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
     restart: unless-stopped
+
+volumes:
+  prometheus_data:

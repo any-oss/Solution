@@ -2,12 +2,13 @@
 *.pem
 *.key
 *secret*
-*password*
 *.token
 .docker_token
-.DS_Store
 __pycache__/
 *.pyc
+.pytest_cache
+.coverage
+htmlcov/
 models/
 logs/
 data/
