@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-proxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ai-proxy
+  template:
+    metadata:
+      labels:
+        app: ai-proxy
+    spec:
+      containers:
+      - name: proxy
+        image: anydockerhub/solution:latest
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-proxy-service
+spec:
+  selector:
+    app: ai-proxy
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
