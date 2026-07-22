@@ -1,47 +1,75 @@
-# Intelligent Request Router
+# AI-Powered Multi-Agent Development System
 
 [![Build Status](https://github.com/anydockerhub/summy/actions/workflows/docker-build.yml/badge.svg)](https://github.com/anydockerhub/summy/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker Pulls](https://img.shields.io/docker/pulls/anydockerhub/summy)](https://hub.docker.com/r/anydockerhub/summy)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
 ## Overview
 
-The **Intelligent Request Router** is a high-performance, production-grade microservice designed to optimize LLM inference costs and latency. It acts as a smart reverse proxy that dynamically routes incoming chat completion requests to either a cost-efficient CPU backend or a high-throughput GPU backend based on prompt complexity.
+The **AI-Powered Multi-Agent Development System** is a comprehensive, production-grade platform that orchestrates multiple specialized AI agents to automate software development workflows. Built on top of the Intelligent Request Router architecture, this system extends routing capabilities to coordinate nine distinct agent types for code generation, refactoring, testing, bug detection, documentation, migration, DevOps automation, and release management.
 
-By analyzing request payloads in real-time, this system ensures that short, simple queries are handled by lightweight CPU instances, while complex, long-context prompts are offloaded to specialized GPU clusters. This architecture significantly reduces infrastructure costs while maintaining low latency for all user interactions.
+By leveraging Qwen2.5 models with strategic model routing, the system efficiently distributes tasks between fast models for classification and powerful models for complex reasoning, ensuring optimal performance and cost-effectiveness.
 
 ## Key Features
 
-- **🧠 Intelligent Routing**: Automatically directs traffic based on prompt token length (threshold configurable).
-- **⚡ High Performance**: Built with FastAPI and Uvicorn for non-blocking, asynchronous request handling.
-- **🛡️ Production Ready**: Includes comprehensive health checks, graceful shutdowns, and structured logging.
-- **📊 Observability**: Native Prometheus metrics export for monitoring throughput, latency, and routing decisions.
-- **☁️ Cloud Native**: Fully containerized with Docker and ready for Kubernetes deployment with HPA support.
-- **🔄 CI/CD Integrated**: Automated build and push pipelines via GitHub Actions.
+- **🤖 Multi-Agent Architecture**: Nine specialized agents working in concert to handle complete development lifecycles
+- **🧠 Intelligent Task Routing**: Automatic task classification and routing to appropriate agents based on complexity
+- **⚡ High Performance**: Asynchronous workflow processing with priority-based task queues
+- **🛡️ Production Ready**: Comprehensive error handling, structured logging, and graceful degradation
+- **📊 Observability**: Prometheus metrics for agent performance, task throughput, and queue health
+- **☁️ Cloud Native**: Fully containerized with Docker, Kubernetes manifests, and HPA support
+- **🔄 CI/CD Integrated**: Automated pipelines for testing, building, and deployment
+- **🔒 Security First**: OWASP-compliant defaults, input validation, and secure credential handling
+
+## Agent System
+
+### Available Agents
+
+| Agent | Purpose | Model | Use Case |
+| :--- | :--- | :--- | :--- |
+| **CodeGeneratorAgent** | Generate new code from specifications | qwen2.5-coder | Creating functions, classes, modules |
+| **RefactoringAgent** | Improve existing code quality | qwen2.5-coder | Code smell detection, restructuring |
+| **CodeViewAgent** | Code exploration and visualization | qwen2.5 | Structure analysis, dependency graphs |
+| **TestingAgent** | Automated test generation | qwen2.5-coder | Unit tests, integration tests, mocks |
+| **BugDetectionAgent** | Identify defects and vulnerabilities | qwen2.5-coder | Security scans, performance issues |
+| **DocumentationAgent** | Generate technical documentation | qwen2.5 | Docstrings, READMEs, API docs |
+| **MigrationAgent** | Manage code and DB migrations | qwen2.5 | Schema changes, version upgrades |
+| **DevOpsAgent** | Infrastructure automation | qwen2.5 | Dockerfiles, K8s manifests, CI/CD |
+| **ReleaseAgent** | Release management and versioning | qwen2.5 | Version bumps, changelogs, tags |
 
 ## Architecture
 
 ```mermaid
 graph LR
-    Client[Client App] -->|HTTPS| Proxy[Router Service :8000]
-    Proxy -->|Short Prompt| CPU[CPU Backend :8001]
-    Proxy -->|Long Prompt| GPU[GPU Backend :8002]
+    Client[Client App] -->|HTTPS| Router[API Router]
+    Router -->|Classify| Orchestrator[Workflow Orchestrator]
+    Orchestrator -->|Route| Queue[Task Queue]
     
-    subgraph "Backend Pool"
-    CPU
-    GPU
+    Queue -->|High Priority| Agent1[Code Generator]
+    Queue -->|Normal| Agent2[Testing Agent]
+    Queue -->|Low| Agent3[Documentation]
+    
+    subgraph "Agent Pool"
+    Agent1
+    Agent2
+    Agent3
     end
     
-    Proxy -.->|Metrics| Prometheus[Prometheus]
+    Queue -.->|Metrics| Prometheus[Prometheus]
+    Queue --> DB[(Database)]
 ```
 
 ### Component Roles
 
 | Service | Port | Role |
 | :--- | :--- | :--- |
-| **Router (Proxy)** | `8000` | Entry point. Parses JSON, calculates length, routes request. |
-| **CPU Backend** | `8001` | Handles prompts ≤ 100 characters. Optimized for cost. |
-| **GPU Backend** | `8002` | Handles prompts > 100 characters. Optimized for speed on heavy loads. |
+| **API Router** | `8000` | Entry point, request parsing, authentication |
+| **Workflow Orchestrator** | Internal | Task classification and agent routing |
+| **Task Queue** | Internal | Priority-based async task processing |
+| **CPU Backend** | `8001` | Lightweight agent tasks, classification |
+| **GPU Backend** | `8002` | Complex reasoning, code generation |
+| **Database** | `5432` | Task state, results, audit logs |
 
 ## Quick Start
 
@@ -62,7 +90,7 @@ docker compose up -d
 Verify services are running:
 ```bash
 curl http://localhost:8000/health
-# Output: {"status": "healthy", "service": "proxy"}
+# Output: {"status": "healthy", "service": "router"}
 ```
 
 ### Local Development
@@ -80,16 +108,14 @@ curl http://localhost:8000/health
    pip install -r requirements.txt
    ```
 
-3. **Run services individually**:
+3. **Initialize database**:
    ```bash
-   # Terminal 1: CPU Backend
-   uvicorn app.cpu_backend:app --port 8001
+   python -m database.init_db
+   ```
 
-   # Terminal 2: GPU Backend
-   uvicorn app.gpu_backend:app --port 8002
-
-   # Terminal 3: Router
-   uvicorn app.proxy:app --port 8000
+4. **Run the orchestrator**:
+   ```bash
+   python -m workflow.orchestrator
    ```
 
 ## Configuration
@@ -98,66 +124,178 @@ Environment variables can be set via `.env` file or directly in the shell.
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `ROUTING_THRESHOLD` | `100` | Character count threshold to switch from CPU to GPU. |
-| `CPU_BACKEND_URL` | `http://localhost:8001` | Endpoint for the CPU service. |
-| `GPU_BACKEND_URL` | `http://localhost:8002` | Endpoint for the GPU service. |
-| `LOG_LEVEL` | `INFO` | Logging verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
-| `PROMETHEUS_ENABLED` | `true` | Enable/disable metrics endpoint. |
+| `ROUTING_THRESHOLD` | `100` | Character count threshold for CPU/GPU routing |
+| `MAX_WORKERS` | `4` | Maximum concurrent task workers |
+| `DEFAULT_MODEL` | `qwen2.5` | Default model for agent operations |
+| `DATABASE_URL` | `sqlite:///ai_agent.db` | Database connection string |
+| `LOG_LEVEL` | `INFO` | Logging verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `PROMETHEUS_ENABLED` | `true` | Enable/disable metrics endpoint |
+| `TASK_QUEUE_SIZE` | `1000` | Maximum pending tasks in queue |
+
+## Usage Examples
+
+### Code Generation
+
+```python
+from backend.agents import CodeGeneratorAgent
+
+agent = CodeGeneratorAgent(model_name="qwen2.5-coder")
+result = agent.generate(
+    prompt="Create a function to calculate fibonacci numbers",
+    context={"language": "python", "style": "functional"}
+)
+print(result["code"])
+```
+
+### Automated Testing
+
+```python
+from backend.agents import TestingAgent
+
+agent = TestingAgent(framework="pytest")
+code = """
+def add(a, b):
+    return a + b
+"""
+tests = agent.generate_tests(code, coverage_target=90.0)
+print(tests["test_code"])
+```
+
+### Bug Detection
+
+```python
+from backend.agents import BugDetectionAgent
+
+agent = BugDetectionAgent(sensitivity="high")
+code = """
+user_input = request.get('data')
+result = eval(user_input)
+"""
+bugs = agent.scan(code)
+print(f"Found {bugs['summary']['total_bugs']} bugs")
+```
+
+### DevOps Automation
+
+```python
+from backend.agents import DevOpsAgent
+
+agent = DevOpsAgent(platform="kubernetes")
+manifests = agent.create_k8s_manifest("my-service", replicas=3)
+print(manifests["deployment"])
+```
+
+### Workflow Orchestration
+
+```python
+from workflow.orchestrator import WorkflowOrchestrator
+from workflow.task_queue import TaskQueue, TaskPriority
+
+orchestrator = WorkflowOrchestrator()
+queue = TaskQueue(max_workers=4)
+queue.start()
+
+# Submit a code generation task
+queue.enqueue(
+    task_id="task_001",
+    payload={
+        "type": "code_generate",
+        "agent": "CodeGeneratorAgent",
+        "prompt": "Create a REST API endpoint",
+        "code": ""
+    },
+    priority=TaskPriority.HIGH
+)
+
+# Get result
+result = queue.get_result("task_001")
+```
 
 ## API Reference
 
-### Send Chat Completion
+### Send Task Request
 
-**Endpoint**: `POST /v1/chat/completions`
+**Endpoint**: `POST /api/v1/tasks`
 
 **Request**:
 ```json
 {
-  "model": "summy-model",
-  "messages": [
-    {"role": "user", "content": "Hello, how are you?"}
-  ]
+  "task_type": "code_generate",
+  "priority": "high",
+  "payload": {
+    "prompt": "Create a function to validate email addresses",
+    "language": "python"
+  }
 }
 ```
 
 **Response**:
 ```json
 {
-  "id": "chatcmpl-123",
-  "object": "chat.completion",
-  "choices": [
-    {
-      "message": {"role": "assistant", "content": "I am doing well!"},
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {"prompt_tokens": 5, "completion_tokens": 5, "total_tokens": 10},
-  "metadata": {"routed_to": "cpu_backend", "latency_ms": 45}
+  "task_id": "task_abc123",
+  "status": "queued",
+  "estimated_completion_seconds": 5,
+  "result_url": "/api/v1/tasks/task_abc123/result"
+}
+```
+
+### Get Task Result
+
+**Endpoint**: `GET /api/v1/tasks/{task_id}/result`
+
+**Response**:
+```json
+{
+  "task_id": "task_abc123",
+  "status": "completed",
+  "started_at": "2024-01-15T10:30:00Z",
+  "completed_at": "2024-01-15T10:30:05Z",
+  "result": {
+    "code": "def validate_email(email):...",
+    "metadata": {"model": "qwen2.5-coder"}
+  }
 }
 ```
 
 ### Health Check
 
-**Endpoint**: `GET /health`  
-Returns `200 OK` if the service and its downstream connections are healthy.
+**Endpoint**: `GET /health`
+Returns `200 OK` if all services and agents are operational.
 
 ### Metrics
 
-**Endpoint**: `GET /metrics`  
+**Endpoint**: `GET /metrics`
 Exposes Prometheus-compatible metrics including:
-- `http_requests_total`: Total requests processed.
-- `request_routing_duration_seconds`: Time taken to route requests.
-- `backend_latency_seconds`: Latency of downstream backends.
-- `routing_decisions_total`: Count of CPU vs GPU routing decisions.
+- `tasks_processed_total`: Total tasks completed by type
+- `task_queue_size`: Current pending tasks
+- `agent_latency_seconds`: Per-agent processing time
+- `routing_decisions_total`: Task classification counts
+- `worker_threads_active`: Current worker count
+
+## Database Commands
+
+Use the built-in CLI commands for database management:
+
+```bash
+# Run migrations
+python -m database.migrate
+
+# Seed test data
+python -m database.seed
+
+# Reset database (drops and recreates)
+python -m database.reset
+```
 
 ## Monitoring & Observability
 
 The system exports detailed metrics for integration with Prometheus/Grafana stacks.
 
 **Key Dashboards Panels**:
-1. **Routing Distribution**: Pie chart of CPU vs GPU traffic split.
-2. **Latency Heatmap**: P95/P99 latency across different prompt sizes.
-3. **Error Rates**: 4xx/5xx error rates per backend.
+1. **Agent Performance**: Processing time per agent type
+2. **Task Queue Health**: Queue depth, wait times, throughput
+3. **Error Rates**: Failures per agent and task type
+4. **Resource Utilization**: Worker thread usage, memory consumption
 
 To scrape metrics locally:
 ```bash
@@ -166,16 +304,17 @@ curl http://localhost:8000/metrics
 
 ## CI/CD Pipeline
 
-This project uses GitHub Actions to automate building and pushing Docker images to Docker Hub.
+This project uses GitHub Actions to automate building and pushing Docker images.
 
 **Workflow Triggers**:
-- Push to `main` branch → Builds `latest` and `<commit-sha>` tags.
-- Pull Request opened/updated → Builds `pr-<number>` tag for testing.
+- Push to `main` → Builds `latest` and `<commit-sha>` tags
+- Pull Request → Builds `pr-<number>` tag for testing
+- Release → Builds versioned tag and publishes
 
 **Secrets Required**:
-Configure these in your GitHub Repository Settings > Secrets:
-- `DOCKER_USER`: Your Docker Hub username.
-- `DOCKER_PASS`: Your Docker Hub access token or password.
+Configure in GitHub Repository Settings > Secrets:
+- `DOCKER_USER`: Docker Hub username
+- `DOCKER_PASS`: Docker Hub access token
 
 ## Testing
 
@@ -186,9 +325,12 @@ Run the test suite using `pytest`:
 pytest
 
 # Run with coverage
-pytest --cov=app --cov-report=html
+pytest --cov=backend --cov=workflow --cov-report=html
 
-# Run specific test category
+# Run specific agent tests
+pytest tests/test_agents.py -v
+
+# Run integration tests
 pytest -m "integration"
 ```
 
@@ -196,16 +338,84 @@ pytest -m "integration"
 
 ### Common Issues
 
-**1. Connection Refused to Backends**
-- Ensure CPU (`8001`) and GPU (`8002`) services are running before starting the Proxy.
-- Check `CPU_BACKEND_URL` and `GPU_BACKEND_URL` environment variables.
+**1. Tasks Stuck in Queue**
+- Check worker threads: `curl http://localhost:8000/metrics | grep worker`
+- Increase `MAX_WORKERS` if queue depth is consistently high
+- Verify agents are properly initialized
 
-**2. High Latency on Short Prompts**
-- Verify the `ROUTING_THRESHOLD` is set correctly. If too low, short prompts might be hitting the GPU queue unnecessarily.
+**2. Agent Import Errors**
+- Ensure all dependencies are installed: `pip install -r requirements.txt`
+- Check Python version compatibility (3.9+)
+- Verify `PYTHONPATH` includes the workspace root
 
-**3. Docker Build Failures**
-- Ensure you are logged in: `docker login`.
-- Check for architecture mismatches if deploying to ARM-based servers (e.g., Apple Silicon).
+**3. Database Connection Failed**
+- Run initialization: `python -m database.init_db`
+- Check `DATABASE_URL` environment variable
+- Ensure write permissions for SQLite file
+
+**4. High Latency on Code Generation**
+- Consider routing to GPU backend for complex tasks
+- Adjust `ROUTING_THRESHOLD` based on prompt complexity
+- Monitor GPU backend availability
+
+### Debug Commands
+
+```bash
+# View task queue status
+curl http://localhost:8000/api/v1/queue/status
+
+# Get agent health
+curl http://localhost:8000/api/v1/agents/health
+
+# Tail logs
+docker compose logs -f orchestrator
+```
+
+## Project Structure
+
+```
+/workspace
+├── backend/
+│   └── agents/           # Specialized AI agents
+│       ├── __init__.py
+│       ├── code_generator_agent.py
+│       ├── refactoring_agent.py
+│       ├── testing_agent.py
+│       ├── bug_detection_agent.py
+│       ├── documentation_agent.py
+│       ├── migration_agent.py
+│       ├── devops_agent.py
+│       ├── release_agent.py
+│       └── code_view_agent.py
+├── workflow/
+│   ├── orchestrator.py   # Task orchestration logic
+│   └── task_queue.py     # Priority queue implementation
+├── core/
+│   ├── proxy.py          # Request router
+│   ├── config.py         # Configuration management
+│   ├── database.py       # Database utilities
+│   └── metrics.py        # Prometheus metrics
+├── database/
+│   ├── schema.sql        # Database schema
+│   └── init_db.py        # Initialization script
+├── api/
+│   ├── router.py         # API endpoints
+│   └── models.py         # Pydantic models
+├── cli/
+│   └── optimized_cli.py  # Command-line interface
+├── scripts/
+│   ├── verify.sh         # Verification script
+│   ├── smoke_test.sh     # Smoke tests
+│   └── rollback.sh       # Rollback procedures
+├── tests/
+│   ├── test_proxy.py
+│   ├── test_agents.py
+│   └── test_workflow.py
+├── docs/                 # Documentation
+├── deployment/           # Docker & K8s configs
+├── monitoring/           # Logging & metrics
+└── prompts/              # Agent prompt templates
+```
 
 ## License
 
@@ -215,11 +425,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
 
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes (`git commit -m 'Add some amazing feature'`).
-4. Push to the branch (`git push origin feature/amazing-feature`).
-5. Open a Pull Request.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for security policies and reporting procedures.
 
 ---
-*Built with ❤️ by the Summy Team*
+*Built with ❤️ by the Summy Team - Empowering developers with AI-driven automation*

@@ -12,6 +12,9 @@ COPY cli/ ./cli/
 COPY sdk/ ./sdk/
 COPY tests/ ./tests/
 
+# Create data directory for database
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
+
 RUN chown -R appuser:appuser /app
 USER appuser
 

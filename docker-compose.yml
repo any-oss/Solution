@@ -22,6 +22,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    volumes:
+      - proxy_data:/app/data
 
   cpu-backend:
     build: .
@@ -51,6 +53,24 @@ services:
       retries: 3
     restart: unless-stopped
 
+  ui-dashboard:
+    build: .
+    command: python -m ui.app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - PROXY_URL=http://proxy:8000
+    depends_on:
+      - proxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:v2.45.0
     ports:
@@ -67,3 +87,4 @@ services:
 
 volumes:
   prometheus_data:
+  proxy_data:
