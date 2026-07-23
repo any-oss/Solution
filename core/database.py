@@ -12,7 +12,7 @@ import logging
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Generator
 from pathlib import Path
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class RequestLog:
     """Represents a logged request."""
     id: Optional[int] = None
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     method: str = ""
     endpoint: str = ""
     prompt_length: int = 0
@@ -38,7 +38,7 @@ class RequestLog:
 class BackendMetric:
     """Represents backend performance metrics."""
     id: Optional[int] = None
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     backend_type: str = "cpu"
     requests_processed: int = 0
     avg_latency_ms: float = 0.0
@@ -354,7 +354,7 @@ class Database:
                  threshold_used, decision_reason)
                 VALUES (?, ?, ?, ?, ?)
             """, (
-                datetime.utcnow().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
                 prompt_length,
                 selected_backend,
                 threshold,
@@ -377,7 +377,7 @@ class Database:
         Returns:
             Session data as dictionary.
         """
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         
         with self.pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -425,7 +425,7 @@ class Database:
             session_id: Session identifier.
             tokens_used: Number of tokens used in this request.
         """
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         
         with self.pool.get_connection() as conn:
             cursor = conn.cursor()
@@ -451,7 +451,7 @@ class Database:
             Analytics data including request counts, latency stats, 
             routing distribution, and error rates.
         """
-        cutoff = (datetime.utcnow().timestamp() - hours * 3600)
+        cutoff = (datetime.now(timezone.utc).timestamp() - hours * 3600)
         cutoff_str = datetime.fromtimestamp(cutoff).isoformat()
         
         with self.pool.get_connection() as conn:
@@ -537,7 +537,7 @@ class Database:
         Returns:
             Number of rows deleted.
         """
-        cutoff = (datetime.utcnow().timestamp() - days * 86400)
+        cutoff = (datetime.now(timezone.utc).timestamp() - days * 86400)
         cutoff_str = datetime.fromtimestamp(cutoff).isoformat()
         
         deleted = 0
