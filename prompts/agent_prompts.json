@@ -1,0 +1,46 @@
+{
+    "routing": {
+        "task_classification": "Analyze this request and classify it into one of these categories: code_generation, refactoring, testing, bug_detection, documentation, migration, devops, release. Request: {{request}}",
+        "complexity_assessment": "Assess the complexity of this task on a scale of 1-10. Consider: code size, number of dependencies, required domain knowledge. Task: {{task}}"
+    },
+    "code_generator": {
+        "default": "Generate {{language}} code that accomplishes: {{description}}. Follow best practices, include error handling, and add appropriate comments.",
+        "with_context": "Given this existing code context:\n{{context}}\n\nGenerate {{language}} code that: {{description}}. Ensure compatibility with the existing codebase.",
+        "refinement": "Improve this code based on the feedback: {{feedback}}\n\nOriginal code:\n{{code}}"
+    },
+    "refactoring": {
+        "analyze": "Analyze this {{language}} code for refactoring opportunities. Identify code smells, violations of SOLID principles, and suggest improvements:\n{{code}}",
+        "apply": "Refactor this code to improve {{focus_area}} while maintaining functionality:\n{{code}}",
+        "review": "Review the refactored code and ensure no functionality was lost:\n{{original}}\n{{refactored}}"
+    },
+    "testing": {
+        "generate_unit_tests": "Write comprehensive unit tests for this {{language}} code using {{framework}}. Include edge cases, error scenarios, and achieve at least {{coverage}}% coverage:\n{{code}}",
+        "generate_integration_tests": "Create integration tests for this module. Consider interactions with: {{dependencies}}\n\nCode:\n{{code}}",
+        "fix_failing_test": "This test is failing. Analyze the failure and fix either the test or the code:\n{{test_code}}\n{{error_message}}"
+    },
+    "bug_detection": {
+        "security_scan": "Scan this {{language}} code for security vulnerabilities including: SQL injection, XSS, CSRF, hardcoded credentials, insecure cryptography:\n{{code}}",
+        "performance_analysis": "Identify performance bottlenecks in this code. Look for: O(n²) operations, unnecessary allocations, memory leaks, inefficient algorithms:\n{{code}}",
+        "logic_errors": "Find logical errors and potential bugs in this code. Check for: null pointer issues, off-by-one errors, race conditions, incorrect assumptions:\n{{code}}"
+    },
+    "documentation": {
+        "api_docs": "Generate API documentation for this {{language}} module. Include: function signatures, parameter descriptions, return values, exceptions, and usage examples:\n{{code}}",
+        "readme": "Create a README.md for this project. Include: project description, installation instructions, usage examples, configuration options, and contribution guidelines.\nProject info: {{project_info}}",
+        "changelog": "Generate a changelog entry for version {{version}} based on these changes:\n{{changes}}"
+    },
+    "migration": {
+        "schema_migration": "Generate a database migration script to transform this schema:\nFrom: {{old_schema}}\nTo: {{new_schema}}\n\nInclude both upgrade and downgrade paths.",
+        "data_migration": "Write a data migration script to transform data according to these rules:\n{{rules}}\n\nSource table: {{source}}\nTarget table: {{target}}",
+        "version_upgrade": "Create a plan for upgrading from version {{from_version}} to {{to_version}}. List all required steps, potential breaking changes, and rollback procedures."
+    },
+    "devops": {
+        "dockerfile": "Generate a production-ready Dockerfile for a {{app_type}} application. Include: multi-stage build, security best practices, health checks, and minimal image size.",
+        "k8s_manifest": "Create Kubernetes manifests for deploying this service. Include: Deployment, Service, ConfigMap, and Ingress resources. Replicas: {{replicas}}, Memory: {{memory}}, CPU: {{cpu}}",
+        "ci_pipeline": "Generate a CI/CD pipeline configuration for {{provider}}. Include stages for: linting, testing, building, and deployment."
+    },
+    "release": {
+        "release_notes": "Generate release notes for version {{version}}. Categorize changes into: New Features, Bug Fixes, Improvements, Breaking Changes.\nCommits: {{commits}}",
+        "version_bump": "Determine the appropriate version bump (major/minor/patch) based on these changes:\n{{changes}}\nCurrent version: {{current_version}}",
+        "validation_checklist": "Create a pre-release validation checklist for this {{app_type}} application. Include: tests, documentation, security scans, performance benchmarks."
+    }
+}
